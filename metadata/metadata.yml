@@ -1,0 +1,19 @@
+metadata_version: 1
+name: 'GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication
+  in single-cell RNA data'
+description: Cell-cell interactions coordinate various functions across cell-types
+  in health and disease. Novel single-cell techniques allow us to investigate cellular
+  crosstalk at single-cell resolution. Cell-cell interactions are mediated by underlying
+  gene-gene networks, however most current methods are unable to account for complex
+  inter-connections within the cell as well as incorporate the effect of pathway and
+  protein complexes on interactions. Therefore, to utilise relations of cells to ligands
+  and receptors as well as multiple annotations, we present GraphComm - a new graph-based
+  deep learning method for predicting cell-cell communication in single-cell RNAseq
+  datasets. By learning off of a prior model and fine-tuning a network on single-cell
+  transcriptomic data, GraphComm is able to predict cell-cell communication (CCC)
+  activity across cells, and its impact on downstream pathways, spatially adjacent
+  cells and changes due to drug perturbations.
+authors:
+- name: 'Emily So '
+  affiliations:
+  - name: University Health Network

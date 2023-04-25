@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -ex
+
+# This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
+python3 ./predictions/train.py --dataset Drosophila --reproduce True
+python3 ./predictions/train.py --dataset Cardiac_cells --reproduce True --spatial /data/raw_data/Cardiac_cells/Visium-FZ_GT_P19.h5ad
+python3 ./predictions/train.py --dataset Pre_Post/Day0 --reproduce True 
+python3 ./predictions/train.py --dataset Pre_Post/Day7_1 --reproduce True 
+python3 ./predictions/train.py --dataset Pre_Post/Day7_2 --reproduce True 
