@@ -8,7 +8,7 @@ This repository will allow you to seamlessly reproduce all figures from the manu
 - To use the pre-saved models on the same datasets, simply clik the `Reproducible Run` button and CCI predictions will be generated in the results folder. 
 - benchmarking figures can be generated using `LIANA.iypnb` and `CCI.ipynb` in the folder `/code/benchmarking`. 
 ## Working outside of Code Ocean
-- Please navigate to the Code Ocean Capsule and download the `data` folder 
+- Please navigate to the [Code Ocean Capsule](https://codeocean.com/capsule/8269062/tree/v2) and download the `data` folder 
 - navigate to the code directory
 - execute the command `bash ./run` (this may require the creation of certain folders/changing of paths. the files `/code/predictions/train.py` and `/code/predictions/utils.py` will require the changing of paths. )
 
