@@ -1,14 +1,70 @@
-# GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication in single-cell RNA data
+# GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication in single-cell RNAseq data
+
+Emily So<sup>1,2,5</sup>, Sikander Hayat<sup>3</sup>, Sisira Kadambat Nair<sup>1</sup>, Bo Wang<sup>4,5,6,7,\$</sup>,Benjamin Haibe-Kains<sup>1,2,4,6,8,9,\$</sup>
+
+<sup>1</sup>Princess Margaret Cancer Centre, University Health Network, Toronto, Canada
+
+<sup>2</sup>Department of Medical Biophysics, University of Toronto, Toronto, Canada
+
+<sup>3</sup>Institute of Experimental Medicine and Systems Biology, UniKlinik RWTH Aachen, Aachen, Germany
+
+<sup>4</sup>Vector Institute for Artificial Intelligence, Toronto, Canada
+
+<sup>5</sup>Peter Munk Cardiac Centre, Toronto, Canada
+
+<sup>6</sup>Department of Computer Science, University of Toronto, Toronto, Canada
+
+<sup>7</sup>Department of Laboratory Medicine and Pathobiology, University of Toronto, Toronto, Canada
+
+<sup>8</sup>Ontario Institute for Cancer Research, Toronto, Canada
+
+<sup>9</sup>Department of Biostatistics, Dalla Lana School of Public Health, Toronto, Canada
+
+
+<sup>$</sup> These authors contributed equally to the present work\
+<sup>#</sup> Corresponding author: Benjamin Haibe-Kains, Princess Margaret Cancer Centre, University Health Network, Toronto, Ontario M5G 2C4 Canada
+
+# Abstract 
+Cell-cell interactions coordinate various functions across cell-types
+in health and disease. Novel single-cell techniques allow us to investigate cellular
+crosstalk at single-cell resolution. Cell-cell interactions are mediated by underlying
+gene-gene networks, however most current methods are unable to account for complex
+inter-connections within the cell as well as incorporate the effect of pathway and
+protein complexes on interactions. Therefore, to utilise relations of cells to ligands
+and receptors as well as multiple annotations, we present GraphComm - a new graph-based
+deep learning method for predicting cell-cell communication in single-cell RNAseq
+datasets. By learning off of a prior model and fine-tuning a network on single-cell
+transcriptomic data, GraphComm is able to predict cell-cell communication (CCC)
+activity across cells, and its impact on downstream pathways, spatially adjacent
+cells and changes due to drug perturbations.
+
 
 This repository will allow you to seamlessly reproduce all figures from the manuscript GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication in single-cell RNA data, as well as generate new CCC predictions on your own data.
 
-## Reproducing Original Figures 
+# Navigating the repository
+## code folder 
+- `/code/benchmarking`:notebooks that will allow you to regenerate figures from the original experiments, benchmarking against other methods and randomization interactions
+- `/code/preprocessing`:notebook that will lead you through how to create the required input for GraphComm inference
+- `/code/randomization`:an example script detailing how to run randomization expriments that were conducted for the manuscript
+- `/code/predictions`:all utilies and scripts necessary to conduct Graphcomm training and inference
+ - `/code/predictions/utils.py`: all functions to conduct training processes for GraphComm (extracting embeddings from the ground truth, computing probabilites using GAT
+ - `/code/predictions/model.py`: architecture for both the ground truth Node2Vec and the GAT 
+ - `/code/predictions/train.py`: script that will, with  input created from `/code/preprocessing` will perform the two step training and inference of CCC by GraphComm
+## data folder
+- `/data/GraphComm_Input`: input directed graphs used in the original manuscript to generate GraphComm results 
+- `/data/GraphComm_Output`: results from GraphComm inference used in the original publication
+- `/data/models`: saved models for each dataset used in the original publication
+- `/data/LR_database`: all information used from the Omnipath Database used for CCC predictions
+- `/data/random_data`: results from randomization expreiments on each dataset for benchmarking
+- `/data/raw_data`: original count matrices from each dataset
+
+# Reproducing Original Figures 
 ## Working in Code Ocean 
 - If you would like to use the **exact** results used in the publication, those can be found in  `/data/GraphComm_Output`
 - To use the pre-saved models on the same datasets, simply clik the `Reproducible Run` button and CCI predictions will be generated in the results folder. 
 - benchmarking figures can be generated using `LIANA.iypnb` and `CCI.ipynb` in the folder `/code/benchmarking`. 
 ## Working outside of Code Ocean
-- Please navigate to the [Code Ocean Capsule](https://codeocean.com/capsule/8269062/tree/v2) and download the `data` folder 
+- Please navigate to the Code Ocean Capsule and download the `data` folder 
 - navigate to the code directory
 - execute the command `bash ./run` (this may require the creation of certain folders/changing of paths. the files `/code/predictions/train.py` and `/code/predictions/utils.py` will require the changing of paths. )
 
@@ -18,15 +74,8 @@ This repository will allow you to seamlessly reproduce all figures from the manu
 - Save your directed Graph files to the directory `/data/GraphComm_Input` with a unique dataset name (you will have to create the directory first). 
 - Execute the python file `train.py`, specifying the appropriate flags. 
 
-# Navigating the code folder 
-- `/code/benchmarking`:notebooks that will allow you to regenerate figures from the original experiments, benchmarking against other methods and randomization interactions
-- `/code/preprocessing`:notebook that will lead you through how to create the required input for GraphComm inference
-- `/code/randomization`:an example script detailing how to run randomization expriments that were conducted for the manuscript
-- `/code/predictions`:all utilies and scripts necessary to conduct Graphcomm training and inference
- - `/code/predictions/utils.py`: all functions to conduct training processes for GraphComm (Representation Learning from the ground truth, computing probabilites using GAT
- - `/code/predictions/model.py`: architecture for both the ground truth Node2Vec and the GAT 
- - `/code/predictions/train.py`: script that will, with  input created from `/code/preprocessing` will perform the two step training and inference of CCC by GraphComm
 
-Should you have any inquiries or questions, pelase contact emily.so@mail.utoronto.ca
+
+Should you have any inquiries or questions, please contact the developer at emily.so@mail.utoronto.ca
 
 
