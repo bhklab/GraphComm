@@ -23,7 +23,7 @@ This repository will allow you to seamlessly reproduce all figures from the manu
 - `/code/preprocessing`:notebook that will lead you through how to create the required input for GraphComm inference
 - `/code/randomization`:an example script detailing how to run randomization expriments that were conducted for the manuscript
 - `/code/predictions`:all utilies and scripts necessary to conduct Graphcomm training and inference
- - `/code/predictions/utils.py`: all functions to conduct training processes for GraphComm (extracting embeddings from the ground truth, computing probabilites using GAT
+ - `/code/predictions/utils.py`: all functions to conduct training processes for GraphComm (Representation Learning from the ground truth, computing probabilites using GAT
  - `/code/predictions/model.py`: architecture for both the ground truth Node2Vec and the GAT 
  - `/code/predictions/train.py`: script that will, with  input created from `/code/preprocessing` will perform the two step training and inference of CCC by GraphComm
 
