@@ -251,9 +251,9 @@ def Omnipath_test(model,data):
 class GAT(torch.nn.Module):
     def __init__(self,data,num_classes=3):
         super(GAT, self).__init__()
-        self.hid = 3
-        self.in_head = 3
-        self.out_head = 3
+        self.hid = 5
+        self.in_head = 5
+        self.out_head = 1
         
         
         self.conv1 = GATConv(data.x.shape[1], self.hid, heads=self.in_head, dropout=0.6)
@@ -262,12 +262,11 @@ class GAT(torch.nn.Module):
 
     def forward(self, data):
         x, edge_index = data.x, data.edge_index
-                
         x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv1(x, edge_index)
         x = F.elu(x)
         x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv2(x, edge_index)
-        x = F.elu(x)
+        #x = F.elu(x)
         x = F.logsigmoid(x)
         return x

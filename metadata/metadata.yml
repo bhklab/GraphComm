@@ -1,6 +1,6 @@
 metadata_version: 1
 name: 'GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication
-  in single-cell RNA data'
+  in single-cell RNAseq data'
 description: Cell-cell interactions coordinate various functions across cell-types
   in health and disease. Novel single-cell techniques allow us to investigate cellular
   crosstalk at single-cell resolution. Cell-cell interactions are mediated by underlying

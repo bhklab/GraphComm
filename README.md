@@ -25,19 +25,7 @@ Emily So<sup>1,2,5</sup>, Sikander Hayat<sup>3</sup>, Sisira Kadambat Nair<sup>1
 <sup>#</sup> Corresponding author: Benjamin Haibe-Kains, Princess Margaret Cancer Centre, University Health Network, Toronto, Ontario M5G 2C4 Canada
 
 # Abstract 
-Cell-cell interactions coordinate various functions across cell-types
-in health and disease. Novel single-cell techniques allow us to investigate cellular
-crosstalk at single-cell resolution. Cell-cell interactions are mediated by underlying
-gene-gene networks, however most current methods are unable to account for complex
-inter-connections within the cell as well as incorporate the effect of pathway and
-protein complexes on interactions. Therefore, to utilise relations of cells to ligands
-and receptors as well as multiple annotations, we present GraphComm - a new graph-based
-deep learning method for predicting cell-cell communication in single-cell RNAseq
-datasets. By learning off of a prior model and fine-tuning a network on single-cell
-transcriptomic data, GraphComm is able to predict cell-cell communication (CCC)
-activity across cells, and its impact on downstream pathways, spatially adjacent
-cells and changes due to drug perturbations.
-
+Cell-cell interactions coordinate various functions across cell-types in health and disease. Novel single-cell techniques allow us to investigate cellular crosstalk at single-cell resolution. Cell-cell communication (CCC) is mediated by underlying gene-gene networks, however most current methods are unable to account for complex inter-connections within the cell as well as incorporate the effect of pathway and protein complexes on interactions. This results in the inability to infer overarching signalling patterns within a dataset as well as limit the ability to successfully explore other data types such as spatial cell dimension. Therefore, to represent transcriptomic data as intricate networks connecting cells to ligands and receptors for relevant cell-cell communication inference as well as incorporating descriptive information independent of gene expression, we present GraphComm - a new graph-based deep learning method for predicting cell-cell communication in single-cell RNAseq datasets. GraphComm improves CCC inference by capturing detailed information such as cell location and intracellular signalling patterns from a database of more than 30,000 protein interaction pairs. With this framework, GraphComm is able to predict biologically relevant results in datasets previously validated for CCC,datasets that have undergone chemical or genetic perturbations and datasets with spatial cell information.
 
 This repository will allow you to seamlessly reproduce all figures from the manuscript GraphComm: A Graph-based Deep Learning Method to Predict Cell-Cell Communication in single-cell RNA data, as well as generate new CCC predictions on your own data.
 
@@ -61,12 +49,11 @@ This repository will allow you to seamlessly reproduce all figures from the manu
 # Reproducing Original Figures 
 ## Working in Code Ocean 
 - If you would like to use the **exact** results used in the publication, those can be found in  `/data/GraphComm_Output`
-- To use the pre-saved models on the same datasets, simply clik the `Reproducible Run` button and CCI predictions will be generated in the results folder. 
-- benchmarking figures can be generated using `LIANA.iypnb` and `CCI.ipynb` in the folder `/code/benchmarking`. 
+- Navigate to the App Panel in the left Tab viewer, and select your parameters for running
 ## Working outside of Code Ocean
 - Please navigate to the Code Ocean Capsule and download the `data` folder 
 - navigate to the code directory
-- execute the command `bash ./run` (this may require the creation of certain folders/changing of paths. the files `/code/predictions/train.py` and `/code/predictions/utils.py` will require the changing of paths. )
+- execute the command `bash ./run <dataset to run> <True/False for using presaved models/>` (this may require the creation of certain folders/changing of paths. the files `/code/predictions/train.py` and `/code/predictions/utils.py` will require the changing of paths. )
 
 # Generating new Predictions on new Datasets
 - Download dataset of choice into the folder `/data/`

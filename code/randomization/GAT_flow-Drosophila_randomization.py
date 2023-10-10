@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
 
 
 import warnings
@@ -63,6 +67,14 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from scipy.io import mmread
 
+
+# # Pre-processing from original matrix
+# 
+
+# In[4]:
+
+
+#matrix = pd.read_csv("../data/GSE95025/GSM2494785_dge_mel_rep3.txt",sep="\t")
 matrix_list = []
 common_genes = []
 for i,j in zip(range(3,8),range(5,10)):
@@ -74,16 +86,35 @@ for i,j in zip(range(3,8),range(5,10)):
         #matrix_list = [i.loc[common_genes] for i in matrix_list]
 matrix = pd.concat(matrix_list)
 
+
+# In[ ]:
+
+
 matrix = matrix.loc[common_genes]
 matrix = matrix[~matrix.index.duplicated(keep='first')]
 
+
+# In[ ]:
+
+
 matrix.index = [str(i).upper() for i in matrix.index.tolist()]
+
+
+# In[ ]:
+
 
 from scipy.stats import wilcoxon
 import anndata
 import scanpy as sc
 
+
+# In[ ]:
+
+
 index = matrix.index.tolist()
+
+
+# In[ ]:
 
 
 matrix = matrix.fillna(0)
@@ -103,8 +134,8 @@ Omnipath_nodes.index = Omnipath_nodes["Id"].tolist()
     
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = "cpu"
-LR_nodes = pd.read_csv("/h/soemily/GAT/data/LR_database/new_OmniPath_nodes.csv",index_col=0)
-Omnipath_network = pd.read_csv("/h/soemily/GAT/data/LR_database/new_OmniPath_interactions.csv",index_col=0)
+LR_nodes = pd.read_csv("/h/soemily/GAT/data/LR_database/intercell_nodes.csv",index_col=0)
+Omnipath_network = pd.read_csv("/h/soemily/GAT/data/LR_database/intercell_interactions.csv",index_col=0)
 LR_nodes.index = LR_nodes["Id"].tolist()
 
 new_identifier = [row["identifier"] + "_" + row["category"] for index,row in LR_nodes.iterrows()]
@@ -159,5 +190,5 @@ for i in range(10):
 for i in range(len(df_list)):
     temp = df_list[i]
     temp = temp.head(1000)
-    temp.to_csv(f"/data/random_data/Drosophila/Drosophila_{i+1}_random.csv")
+    temp.to_csv(f"/h/soemily/GAT/results/GSE95025/Drosophila_{i+41}_random.csv")
 

@@ -56,7 +56,7 @@ parser.add_argument('--dataset', type=str, default='{args.dataset}', help='Datas
 parser.add_argument('--spatial', type=str, default=None, help="pathway to h5ad containing spatial coordinates")
 parser.add_argument("--reproduce",type=str,default="True",help="reproduce original results of paper")
 parser.add_argument("--Omnipath_lr",type=str,default="0.01",help="reproduce original results of paper")
-
+parser.add_argument("--cell_groups",type=str,default="0.01",help="whether to write")
 args = parser.parse_args()
 
 nodes = pd.read_csv(f"/data/GraphComm_Input/{args.dataset}/nodes.csv",index_col=0)
@@ -79,7 +79,7 @@ if args.reproduce == "True":
 else:
     total_link_df = get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Omnipath_nodes,Omnipath_interactions,spatial=args.spatial,reproduce=None,save=args.dataset)
 
-
+total_link_df["Prob"] = (total_link_df["Prob"]-total_link_df["Prob"].min())/(total_link_df["Prob"].max()-total_link_df["Prob"].min())
 os.system("mkdir -p {}".format(f"/results/GraphComm_Output/{args.dataset}/"))
 total_link_df.to_csv(f"/results/GraphComm_Output/{args.dataset}/CCI.csv")
 

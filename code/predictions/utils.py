@@ -153,6 +153,7 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = "cpu"
+    torch.manual_seed(0)
     Omnipath_data,Omnipath_nodes,Omnipath_interactions = make_dataset(nodes,interactions,first=False,pathway_encode=False)
     node_info = pd.DataFrame(np.zeros((Omnipath_nodes.shape[0],Omnipath_nodes.shape[0])),index=Omnipath_nodes["identifier"].tolist(),columns=Omnipath_nodes["identifier"].tolist())
 
@@ -172,7 +173,7 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     group_complex.index=range(0,group_complex.shape[0])
 
     for index,row in group_complex.iterrows():
-        node_info.loc[list(set(row["member"])),list(set(row["member"]))] = index
+        node_info.loc[list(set(row["member"])),list(set(row["member"]))] += 1
         
     pathways = pd.read_csv("/data/LR_database/kegg_pathways.csv",index_col=0)
     pathways = pathways[pathways["genesymbol"].isin(temp_identifiers)]
@@ -182,7 +183,7 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     group_pathway.index=range(0,group_pathway.shape[0])
 
     for index,row in group_pathway.iterrows():
-        node_info.loc[list(set(row["genesymbol"])),list(set(row["genesymbol"]))] += index
+        node_info.loc[list(set(row["genesymbol"])),list(set(row["genesymbol"]))] += 1
     truth_info = pd.DataFrame(np.zeros((Omnipath_nodes.shape[0],Omnipath_nodes.shape[0])),index=Omnipath_nodes["identifier"].tolist(),columns=Omnipath_nodes["identifier"].tolist())
 
     Omnipath_nodes.index = Omnipath_nodes["Id"].tolist()
@@ -207,26 +208,12 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     ident_interactions = ident_interactions.drop_duplicates("Dst")
 
     ident_interactions.index = range(0,ident_interactions.shape[0])
-
-    truth_list = []
-    for i in Omnipath_nodes["identifier"].tolist():
-        if "Ligand" in i:
-            if i in ident_interactions["Src"].tolist():
-                truth_list.append(1)
-            else:
-                truth_list.append(0)
-        if "Receptor" in i:
-            if i in ident_interactions["Dst"].tolist():
-                truth_list.append(1)
-            else:
-                truth_list.append(0)
-
+    
     node_info.values[np.where(np.isnan(node_info.values))] = 0
     node_info.values[np.where(np.isinf(node_info.values))] = 0
 
     Omnipath_data.x = torch.Tensor(node_info.values)
 
-    Omnipath_data.y = torch.Tensor(truth_list).type(torch.LongTensor)
     Omnipath_nodes.index = Omnipath_nodes["Id"].tolist()
 
     Omnipath_interactions["Src"] = [Omnipath_nodes.loc[i]["identifier"] for i in Omnipath_interactions["Src"].tolist()]
@@ -234,12 +221,13 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     
     edge_weights = [1 for i,j in zip(Omnipath_interactions["Src"].tolist(),Omnipath_interactions["Dst"].tolist())]
     data = Omnipath_data
+    torch.manual_seed(0)
     if reproduce is not None:
         print("Reproducing results from original paper - no training process")
         model = torch.load(f"/data/models/{reproduce}/Omnipath.pt")
     else:
-        model = Omnipath_Node2Vec(data.edge_index, embedding_dim=2, walk_length=40,
-                     context_size=40, walks_per_node=10,
+        model = Omnipath_Node2Vec(data.edge_index, embedding_dim=128, walk_length=10,
+                     context_size=5, walks_per_node=10,
                      num_negative_samples=1, p=1, q=1, sparse=True).to(device)
 
         loader = model.loader(batch_size=2, shuffle=True, num_workers=4)
@@ -248,8 +236,8 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
             loss = Omnipath_train(model,loader,optimizer)
             if epoch % 10 == 0:
                 print(f'Epoch: {epoch:02d}, Loss: {loss:.4f}')
-        os.system(f"mkdir -p /data/models/{save}")
-        torch.save(model,f"/data/models/{save}/Omnipath.pt")
+        os.system(f"mkdir -p //data/models/{save}")
+        torch.save(model,f"//data/models/{save}/Omnipath.pt")
     model.eval()
     z = model(torch.arange(data.num_nodes)).detach()
 
@@ -260,12 +248,16 @@ def get_Omnipath_embeddings(nodes,interactions,reproduce=None,save=None,lr=0.01)
     receptor_embeddings = z[receptor_ids,:]
 
     total_embeddings = torch.inner(ligand_embeddings,receptor_embeddings)
-
+    ligand_data_x = data.x[ligand_ids]
+    LR_data_x = ligand_data_x[:,receptor_ids]
+    edited_values = torch.mul(total_embeddings[np.where(LR_data_x >= 0)],LR_data_x[np.where(LR_data_x >= 0)])
+    total_embeddings[np.where(LR_data_x >= 0)] = edited_values
     total_embeddings_df = pd.DataFrame(total_embeddings.numpy(),index=Omnipath_nodes[Omnipath_nodes["category"].str.contains("Ligand")]["identifier"].tolist(),columns=Omnipath_nodes[Omnipath_nodes["category"].str.contains("Receptor")]["identifier"].tolist())
     return total_embeddings_df
 
 def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Omnipath_nodes,Omnipath_interactions,spatial=None,reproduce=None,save=None):
     device = 'cpu'
+    torch.manual_seed(0)
     truth_info = pd.DataFrame(np.zeros((Omnipath_nodes.shape[0],Omnipath_nodes.shape[0])),index=Omnipath_nodes["identifier"].tolist(),columns=Omnipath_nodes["identifier"].tolist())
     ident_interactions = Omnipath_interactions.copy()
 
@@ -298,18 +290,35 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
     receptors = [i for i in gene_mean.index.tolist() if "Receptor" in i]
     ligands = list(set(full_matrix.index.tolist()) & set(ligands))
     receptors = list(set(full_matrix.index.tolist()) & set(receptors))
-
-    for i,j in zip(ligands,receptors):
-        if (i in gene_mean.index.tolist()) and (j in gene_mean.index.tolist()):
-            full_matrix.loc[i,j] = gene_mean.loc[i]*gene_mean.loc[j]
-
+    ligands = list(set(ligands)&set(gene_mean.index.tolist()))
+    receptors = list(set(receptors)&set(gene_mean.index.tolist()))
+    new_ligands = []
+    new_receptors = []
+    print("Starting...")
+    # for i in ligands:
+    #     for j in receptors:
+    #         new_ligands.append(i)
+    #         new_receptors.append(j)
+    # for i,j in zip(new_ligands,new_receptors):
+    #         if (i in gene_mean.index.tolist()) and (j in gene_mean.index.tolist()):
+    #             full_matrix.loc[i,j] = gene_mean.loc[i]*gene_mean.loc[j]
+    for i in ligands:
+        #print(type(gene_mean.loc[receptors].tolist()[0]))
+       # print(type(gene_mean.loc[i]))
+        full_matrix.loc[i][receptors] = (gene_mean.loc[receptors]*gene_mean.loc[i]).tolist()
+    print("continuing...")
     ligands = list(set(ligands) & set(total_out_df.index.tolist()))
     receptors = list(set(receptors) & set(total_out_df.columns.tolist()))
-
-    for i,j in zip(ligands,receptors):
-        full_matrix.loc[i,j] += total_out_df.loc[i,j]
-
-
+    new_ligands = []
+    new_receptors = []
+    # for i in ligands:
+    #     for j in receptors:
+    #         new_ligands.append(i)
+    #         new_receptors.append(j)
+    # for i,j in zip(new_ligands,new_receptors):
+    #         full_matrix.loc[i,j] *= total_out_df.loc[i,j]  
+    for i in ligands:
+        full_matrix.loc[i][receptors] *= total_out_df.loc[i][receptors]
     cell_groups = meta["labels"].unique().tolist()
 
     ligands = cell_LR_nodes[cell_LR_nodes["category"]=="Ligand"]["identifier"].tolist()
@@ -392,7 +401,13 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
     LR_ids = cell_LR_nodes[(cell_LR_nodes["category"]=="Ligand") | (cell_LR_nodes["category"]=="Receptor")]["Id"].tolist()
 
     cell_groups = cell_LR_nodes[cell_LR_nodes["category"]=="Cell Group"]['identifier'].tolist()
-
+    #ident_interactions = pd.read_csv("/data/LR_database/intercell_Omnipath.csv",index_col=0)
+    ident_interactions = pd.read_csv("//data/LR_database/consensus_Omnipath.csv",index_col=0)
+    #ident_interactions.columns = ["Src","Dst","references"]
+    ident_interactions.columns = ["Src","Dst"]
+    ident_interactions["Src"] = [i+"_Ligand" for i in ident_interactions["Src"].tolist()]
+    ident_interactions["Dst"] = [i+"_Receptor" for i in ident_interactions["Dst"].tolist()]
+    
     truth_list = []
     for i in cell_LR_nodes["identifier"].tolist():
         if "Ligand" in i:
@@ -412,14 +427,15 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
 
     truth_array = np.array(truth_list)
     positive_classes = np.where(truth_array==1)[0].tolist()
-    negative_classes = np.where(truth_array==0)[0].tolist()[:len(positive_classes)]
-
+    #negative_classes = np.where(truth_array==0)[0].tolist()[:len(positive_classes)]
+    negative_classes = np.where(truth_array==0)[0].tolist()
     new_train_mask = np.array([False]*truth_array.shape[0])
     new_train_mask[positive_classes + negative_classes] = True
     data = cell_LR_data.to(device)
+    torch.manual_seed(0)
     if reproduce is not None:
         print("Reproducing results from original paper - no training process")
-        model = torch.load(f"/data/models/{reproduce}/cell_LR.pt")
+        model = torch.load(f"//data/models/{reproduce}/cell_LR.pt")
     else:
         model = GAT(cell_LR_data,num_classes=2).to(device)
         data.train_mask = torch.Tensor(new_train_mask).type(torch.LongTensor)
@@ -439,20 +455,17 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
             model.train()
             optimizer.zero_grad()
             out = model(data)
-            #loss = F.nll_loss(out[new_train_mask],data.y[new_train_mask])
             ligand_out = out[ligands,:]
             receptor_out = out[receptors,:]
             total_out = torch.inner(ligand_out,receptor_out)
-            #loss = criterion(out[LR_ids],data.y)
-            #loss = criterion(total_out,truth_Tensor)
             loss = criterion(out[new_train_mask],data.y[new_train_mask])
             if epoch % 20 == 0:
                 print(f"Epoch:{epoch} Loss:{loss}")
             loss.backward()
 
             optimizer.step()
-        os.system(f"mkdir -p /data/models/{save}/")
-        torch.save(model,f"/data/models/{save}/cell_LR.pt")
+        os.system(f"mkdir -p //data/models/{save}/")
+        torch.save(model,f"//data/models/{save}/cell_LR.pt")
     model.eval()
     cell_LR_out = model(data)
 
@@ -486,7 +499,7 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
     ligand_nodes.index = range(0,ligand_nodes.shape[0])
     ligand_idents = ligand_nodes.iloc[np.where(ligand_pred==1)]['identifier'].tolist()
     total_out_df = pd.DataFrame(total_out,index=valid_ligands["identifier"].tolist(),columns=valid_receptors["identifier"].tolist())
-    indicies = np.where(total_out_df.values > 0)
+    indicies = np.where(total_out_df.values > -100)
     source = list(indicies[0])
     dest = list(indicies[1])
     index_df = pd.DataFrame({"Id":range(0,total_out_df.shape[0]),"identifier":total_out_df.index.tolist()})
@@ -494,8 +507,9 @@ def get_cell_LR_embeddings(matrix,meta,nodes,interactions,total_embeddings_df,Om
     source_list = index_df.loc[source]["identifier"].tolist()
     dest_list = column_df.loc[dest]["identifier"].tolist()
     total_link_df = pd.DataFrame({"Src":source_list,"Dst":dest_list,"Prob":total_out_df.values[indicies]})
+
     total_link_df = total_link_df.sort_values("Prob",ascending=False)
-    Omnipath_db = pd.read_csv("/data/LR_database/Omnipath_database.csv",index_col=0)
+    Omnipath_db = pd.read_csv("//data/LR_database/Omnipath_database.csv",index_col=0)
     total_link_df["Src"] = [i.split("_")[0] for i in total_link_df["Src"].tolist()]
     total_link_df["Dst"] = [i.split("_")[0] for i in total_link_df["Dst"].tolist()]
     total_link_df = total_link_df.drop_duplicates()
@@ -616,8 +630,8 @@ def make_nodes_interactions(matrix,input_meta=None):
     # In[24]:
 
 
-    LR_nodes = pd.read_csv("/h/soemily/GAT/data/LR_database/OmniPath_nodes.csv",index_col=0)
-    Omnipath_network = pd.read_csv("/h/soemily/GAT/data/LR_database/OmniPath_interactions.csv",index_col=0)
+    LR_nodes = pd.read_csv("//data/LR_database/nodes.csv",index_col=0)
+    Omnipath_network = pd.read_csv("//data/LR_database/interactions.csv",index_col=0)
 
 
     # In[25]:
@@ -759,8 +773,8 @@ def make_nodes_interactions(matrix,input_meta=None):
     interactions["Src"] = nodes.loc[interactions["Src"].tolist()]["Id"].tolist()
     interactions["Dst"] = nodes.loc[interactions["Dst"].tolist()]["Id"].tolist()
 
-    LR_nodes = pd.read_csv("/h/soemily/GAT/data/LR_database/OmniPath_nodes.csv",index_col=0)
-    Omnipath_network = pd.read_csv("/h/soemily/GAT/data/LR_database/OmniPath_interactions.csv",index_col=0)
+    LR_nodes = pd.read_csv("//data/LR_database/nodes.csv",index_col=0)
+    Omnipath_network = pd.read_csv("//data/LR_database/interactions.csv",index_col=0)
     LR_nodes.index = LR_nodes["Id"].tolist()
 
     # In[55]:
