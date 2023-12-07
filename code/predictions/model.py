@@ -268,5 +268,5 @@ class GAT(torch.nn.Module):
         x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv2(x, edge_index)
         #x = F.elu(x)
-        x = F.logsigmoid(x)
+        x = F.sigmoid(x)
         return x
