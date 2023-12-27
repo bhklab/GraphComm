@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -ex
+
+# This is the master script for the capsule. When you click "Reproducible Run", the code in this file will execute.
+
+#Validated Datasets
+
+DATASET=$1
+REPRODUCE=$2
+if [[ "$DATASET" == *"Cardiac"* ]]; then
+  SLIDE=${DATASET##*/}
+  python3 ./predictions/train.py --dataset ${DATASET} --reproduce True --spatial /data/raw_data/Cardiac_cells/Visium-${SLIDE}.h5ad
+
+else
+python3 ./predictions/train.py --dataset ${DATASET} --reproduce ${REPRODUCE}
+fi
+
